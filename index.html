@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <style>
+        .n {
+            width: 30px;
+            font-size: 14pt;
+        }
+    </style>
+</head>
+<body>
+
+    <div style="width: 1000px; margin-left:auto; margin-right:auto;">
+        <div>
+            <table>
+                <tr>
+                    <td><input type="text" name="n_0_0" id="txtN_0_0" class="n"></td>
+                    <td><input type="text" name="n_0_1" id="txtN_0_1" class="n"></td>
+                    <td><input type="text" name="n_0_2" id="txtN_0_2" class="n"></td>
+                    <td><input type="text" name="n_0_3" id="txtN_0_3" class="n"></td>
+                    <td><input type="text" name="n_0_4" id="txtN_0_4" class="n"></td>
+                    <td><input type="text" name="n_0_5" id="txtN_0_5" class="n"></td>
+                    <td><input type="text" name="n_0_6" id="txtN_0_6" class="n"></td>
+                    <td><input type="text" name="n_0_7" id="txtN_0_7" class="n"></td>
+                    <td><input type="text" name="n_0_8" id="txtN_0_8" class="n"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="n_1_0" id="txtN_1_0" class="n"></td>
+                    <td><input type="text" name="n_1_1" id="txtN_1_1" class="n"></td>
+                    <td><input type="text" name="n_1_2" id="txtN_1_2" class="n"></td>
+                    <td><input type="text" name="n_1_3" id="txtN_1_3" class="n"></td>
+                    <td><input type="text" name="n_1_4" id="txtN_1_4" class="n"></td>
+                    <td><input type="text" name="n_1_5" id="txtN_1_5" class="n"></td>
+                    <td><input type="text" name="n_1_6" id="txtN_1_6" class="n"></td>
+                    <td><input type="text" name="n_1_7" id="txtN_1_7" class="n"></td>
+                    <td><input type="text" name="n_1_8" id="txtN_1_8" class="n"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="n_2_0" id="txtN_2_0" class="n"></td>
+                    <td><input type="text" name="n_2_1" id="txtN_2_1" class="n"></td>
+                    <td><input type="text" name="n_2_2" id="txtN_2_2" class="n"></td>
+                    <td><input type="text" name="n_2_3" id="txtN_2_3" class="n"></td>
+                    <td><input type="text" name="n_2_4" id="txtN_2_4" class="n"></td>
+                    <td><input type="text" name="n_2_5" id="txtN_2_5" class="n"></td>
+                    <td><input type="text" name="n_2_6" id="txtN_2_6" class="n"></td>
+                    <td><input type="text" name="n_2_7" id="txtN_2_7" class="n"></td>
+                    <td><input type="text" name="n_2_8" id="txtN_2_8" class="n"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="n_3_0" id="txtN_3_0" class="n"></td>
+                    <td><input type="text" name="n_3_1" id="txtN_3_1" class="n"></td>
+                    <td><input type="text" name="n_3_2" id="txtN_3_2" class="n"></td>
+                    <td><input type="text" name="n_3_3" id="txtN_3_3" class="n"></td>
+                    <td><input type="text" name="n_3_4" id="txtN_3_4" class="n"></td>
+                    <td><input type="text" name="n_3_5" id="txtN_3_5" class="n"></td>
+                    <td><input type="text" name="n_3_6" id="txtN_3_6" class="n"></td>
+                    <td><input type="text" name="n_3_7" id="txtN_3_7" class="n"></td>
+                    <td><input type="text" name="n_3_8" id="txtN_3_8" class="n"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="n_4_0" id="txtN_4_0" class="n"></td>
+                    <td><input type="text" name="n_4_1" id="txtN_4_1" class="n"></td>
+                    <td><input type="text" name="n_4_2" id="txtN_4_2" class="n"></td>
+                    <td><input type="text" name="n_4_3" id="txtN_4_3" class="n"></td>
+                    <td><input type="text" name="n_4_4" id="txtN_4_4" class="n"></td>
+                    <td><input type="text" name="n_4_5" id="txtN_4_5" class="n"></td>
+                    <td><input type="text" name="n_4_6" id="txtN_4_6" class="n"></td>
+                    <td><input type="text" name="n_4_7" id="txtN_4_7" class="n"></td>
+                    <td><input type="text" name="n_4_8" id="txtN_4_8" class="n"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="n_5_0" id="txtN_5_0" class="n"></td>
+                    <td><input type="text" name="n_5_1" id="txtN_5_1" class="n"></td>
+                    <td><input type="text" name="n_5_2" id="txtN_5_2" class="n"></td>
+                    <td><input type="text" name="n_5_3" id="txtN_5_3" class="n"></td>
+                    <td><input type="text" name="n_5_4" id="txtN_5_4" class="n"></td>
+                    <td><input type="text" name="n_5_5" id="txtN_5_5" class="n"></td>
+                    <td><input type="text" name="n_5_6" id="txtN_5_6" class="n"></td>
+                    <td><input type="text" name="n_5_7" id="txtN_5_7" class="n"></td>
+                    <td><input type="text" name="n_5_8" id="txtN_5_8" class="n"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="n_6_0" id="txtN_6_0" class="n"></td>
+                    <td><input type="text" name="n_6_1" id="txtN_6_1" class="n"></td>
+                    <td><input type="text" name="n_6_2" id="txtN_6_2" class="n"></td>
+                    <td><input type="text" name="n_6_3" id="txtN_6_3" class="n"></td>
+                    <td><input type="text" name="n_6_4" id="txtN_6_4" class="n"></td>
+                    <td><input type="text" name="n_6_5" id="txtN_6_5" class="n"></td>
+                    <td><input type="text" name="n_6_6" id="txtN_6_6" class="n"></td>
+                    <td><input type="text" name="n_6_7" id="txtN_6_7" class="n"></td>
+                    <td><input type="text" name="n_6_8" id="txtN_6_8" class="n"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="n_7_0" id="txtN_7_0" class="n"></td>
+                    <td><input type="text" name="n_7_1" id="txtN_7_1" class="n"></td>
+                    <td><input type="text" name="n_7_2" id="txtN_7_2" class="n"></td>
+                    <td><input type="text" name="n_7_3" id="txtN_7_3" class="n"></td>
+                    <td><input type="text" name="n_7_4" id="txtN_7_4" class="n"></td>
+                    <td><input type="text" name="n_7_5" id="txtN_7_5" class="n"></td>
+                    <td><input type="text" name="n_7_6" id="txtN_7_6" class="n"></td>
+                    <td><input type="text" name="n_7_7" id="txtN_7_7" class="n"></td>
+                    <td><input type="text" name="n_7_8" id="txtN_7_8" class="n"></td>
+                </tr>
+                <tr>
+                    <td><input type="text" name="n_8_0" id="txtN_8_0" class="n"></td>
+                    <td><input type="text" name="n_8_1" id="txtN_8_1" class="n"></td>
+                    <td><input type="text" name="n_8_2" id="txtN_8_2" class="n"></td>
+                    <td><input type="text" name="n_8_3" id="txtN_8_3" class="n"></td>
+                    <td><input type="text" name="n_8_4" id="txtN_8_4" class="n"></td>
+                    <td><input type="text" name="n_8_5" id="txtN_8_5" class="n"></td>
+                    <td><input type="text" name="n_8_6" id="txtN_8_6" class="n"></td>
+                    <td><input type="text" name="n_8_7" id="txtN_8_7" class="n"></td>
+                    <td><input type="text" name="n_8_8" id="txtN_8_8" class="n"></td>
+                </tr>
+            </table>
+            <input type="button" value="Resolver" id="btnResolver">
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="sudoku.js"></script>
+    
+</body>
+</html>
