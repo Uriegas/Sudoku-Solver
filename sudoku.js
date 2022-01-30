@@ -5,9 +5,26 @@ $btnResolver.on('click',function(e){
     e.preventDefault();
     const tablerosudoku = getTable();
     console.log(tablerosudoku);
-    console.log(JSON.stringify(tablerosudoku));
-    //Todo: enviar el tablero mediante llamada AJAX, esperar la respuesta - > mostrar la respuesta
-    
+    $.ajax({
+        method: "POST",
+        url: "backend.php",
+        data: {
+            tablero: tablerosudoku // Array of arrays
+        }
+    }).done(function(response){ // TODO: Receive the response
+        if (response == 'error'){
+            alert('Unsolvable Sudoku');
+        }
+        else{
+            const tablero = JSON.parse(response);
+            for (let r = 0; r < 9; r++){
+                for (let c = 0; c < 9; c++){
+                    const elementID = `#txtN_${r}_${c}`;
+                    $(elementID).val(tablero[r][c]);
+                }
+            }
+        }
+    })
 });
 
 function getTable(){
@@ -24,7 +41,7 @@ function getTable(){
 
 function numero0Null(s){
     const v = parseInt(s);
-    return isNaN(v) ? null : v;
+    return isNaN(v) ? 0 : v;
 
 }
 
@@ -32,9 +49,3 @@ function valorMatrix(r,c){
     const elementID = `#txtN_${r}_${c}`;
     return numero0Null($(elementID).val());
 }
-
-// function ajaxFunction(){
-//     const tablerosudoku = getTable();
-//     console.log(tablerosudoku);
-//     console.log(JSON.stringify(tablerosudoku));
-// }
