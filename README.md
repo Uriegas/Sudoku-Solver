@@ -6,3 +6,6 @@ A Sudoku solver web page
 
 ## Output
 ![](sudoku_out.png)
+
+## Credits
+[Backend.php](backend.php) is based in the following [repo](https://github.com/AbcAeffchen/sudoku-php).
