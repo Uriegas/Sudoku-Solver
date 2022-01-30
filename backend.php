@@ -1,517 +1,375 @@
 <?php
-    class Puzzle
+/**
+ * sudoku-php
+ *
+ * @licence     GNU LGPL v3.0 - For details have a look at the LICENSE file
+ * @copyright   2016 Alexander Schickedanz
+ * @link        https://github.com/AbcAeffchen/sudoku-php
+ * @author      Alexander Schickedanz (AbcAeffchen) <abcaeffchen@gmail.com>
+ */
+use InvalidArgumentException;
+
+class Sudoku
+{
+    const VERY_EASY = 0;
+    const EASY      = 5;
+    const NORMAL    = 10;
+    const MEDIUM    = 15;
+    const HARD      = 20;
+
+    private static $blockSizes = [4 => 2, 9 => 3, 16 => 4, 25 => 5, 36 => 6];
+    private static $dimensions = [4, 9, 16, 25, 36];
+
+    /**
+     * Solves the Sudoku.
+     *
+     * @param array $sudoku
+     * @param bool  $checkInput If true, the input gets checked for a valid Sudoku array, i.e.
+     *                          if it's a two dimensional square array containing only int and
+     *                          null values
+     * @return array|false      Returns the solution or false if the sudoku is not solvable.
+     * @throws InvalidArgumentException
+     */
+    public static function solve(array $sudoku, $checkInput = false)
     {
-        /**
-         * Holds the puzzle
-         *
-         * @var array
-         */
-        protected $puzzle = [];
-
-        protected $puzzleColumns = [];
-
-        protected $puzzleBoxes = [];
-
-        /**
-         * Holds the solution
-         *
-         * @var array
-         */
-        protected $solution = [];
-
-        protected $solutionColumns = [];
-
-        protected $solutionBoxes = [];
-
-        /**
-         * The size of the grid
-         *
-         * @var int
-         */
-        protected $cellSize = 3;
-
-        /**
-         * Box lookup by row and column index
-         *
-         * @var array
-         */
-        protected $boxLookup;
-
-        /**
-         * Sets the puzzle on construction
-         *
-         * @param array $puzzle
-         * @param array $solution
-         */
-        public function __construct($cellSize = 3, array $puzzle = [], array $solution = [])
+        if($checkInput && !self::checkInput($sudoku))
         {
-            $this->setCellSize($cellSize, $puzzle, $solution);
+            throw new InvalidArgumentException('The input is no valid Sudoku array.');
         }
 
-        /**
-         * Gets the grid size
-         * 
-         * @return int
-         */
-        public function getCellSize()
-        {
-            return $this->cellSize;
-        }
+        return self::recursive_solve($sudoku, count($sudoku));
+    }
 
-        /**
-         * Sets the grid size
-         *
-         * Changing the grid size will essentially reset the object, setting the $puzzle & $solution properties to valid
-         * empty values. The cell size must be 2 or greater.
-         *
-         * @param int $cellSize
-         * @param array $puzzle
-         * @param array $solution
-         * @return bool
-         */
-        public function setCellSize($cellSize, array $puzzle = [], array $solution = [])
+    private static function recursive_solve(array $sudoku, $size, $row = 0, $col = 0)
+    {
+        do
         {
-            if(is_integer($cellSize) && $cellSize > 1) {
-                $this->cellSize = $cellSize;
-                $this->setPuzzle($puzzle);
-                $this->setSolution($solution);
-                return true;
+            while( $sudoku[$row][$col] !== null )
+            {
+                if(!self::nextCoordinates($size,$row,$col))
+                    return $sudoku;
             }
 
-            return false;
-        }
-
-        /**
-         * Gets the grid size
-         *
-         * @return int
-         */
-        public function getGridSize()
-        {
-            return $this->cellSize * $this->cellSize;
-        }
-
-        /**
-         * Returns the puzzle array
-         * @return array
-         */
-        public function getPuzzle()
-        {
-            return $this->puzzle;
-        }
-
-        /**
-         * Sets the puzzle array
-         *
-         * If an invalid puzzle is supplied, an empty puzzle is generated instead
-         *
-         * @param array $puzzle
-         * @return bool
-         */
-        public function setPuzzle(array $puzzle = [])
-        {
-            if ($this->isValidPuzzleFormat($puzzle)) {
-                $this->puzzle = $puzzle;
-                $this->setSolution($this->puzzle);
-                $this->prepareReferences();
-                return true;
-            } else {
-                $this->puzzle = $this->generateEmptyPuzzle();
-                $this->setSolution($this->puzzle);
-                $this->prepareReferences();
+            $possibilities = self::getPossibilities($sudoku, $size, $row, $col);
+            $numPos = count($possibilities);
+            if($numPos === 0)
                 return false;
-            }
+
+            if($numPos === 1)
+                $sudoku[$row][$col] = reset($possibilities);
+            else
+                break;
+
+        } while(true);
+
+        self::array_shuffle($possibilities);
+        $nextRow = $row;
+        $nextCol = $col;
+        self::nextCoordinates($size,$nextRow,$nextCol);     // cannot return false here.
+        foreach($possibilities as $possibility)
+        {
+            $sudoku[$row][$col] = $possibility;
+            $res = self::recursive_solve($sudoku,$size,$nextRow,$nextCol);
+            if($res !== false)
+                return $res;
         }
 
-        /**
-         * Gets the solution
-         *
-         * @return array
-         */
-        public function getSolution()
-        {
-            return $this->solution;
-        }
+        return false;
+    }
 
-        /**
-         * Sets the solution array
-         *
-         * @param array $solution
-         * @return bool
-         */
-        public function setSolution(array $solution)
+    private static function nextCoordinates($size, &$row, &$col)
+    {
+        $row++;
+        if( $row >= $size )
         {
-            if ($this->isValidPuzzleFormat($solution)) {
-                $this->solution = $solution;
-                $this->prepareReferences(false);
-                return true;
-            } else {
+            $row = 0;
+            $col++;
+            if( $col >= $size )
                 return false;
+        }
+
+        return true;
+    }
+
+    private static function getPossibilities(array &$sudoku, $size, $row, $col)
+    {
+        $possibilities = range(1,$size);
+        // check row and col
+        for($i = 0; $i < $size; $i++)
+        {
+            if($sudoku[$row][$i] !== null)
+                unset($possibilities[$sudoku[$row][$i] - 1]);
+            if($sudoku[$i][$col] !== null)
+                unset($possibilities[$sudoku[$i][$col] - 1]);
+        }
+
+        // check block
+        $jumpRow = $row % self::$blockSizes[$size];
+        $jumpCol = $col % self::$blockSizes[$size];
+        $blockR = $row - $jumpRow;
+        $blockC = $col - $jumpCol;
+
+        for($blockRow = 0; $blockRow < self::$blockSizes[$size]; $blockRow++)
+        {
+            if($blockRow === $jumpRow)
+                continue;
+
+            for($blockCol = 0; $blockCol < self::$blockSizes[$size]; $blockCol++)
+            {
+                if($blockCol === $jumpCol || $sudoku[$blockR + $blockRow][$blockC + $blockCol] === null)
+                    continue;
+
+                unset($possibilities[$sudoku[$blockR + $blockRow][$blockC + $blockCol] - 1]);
             }
         }
 
-        /**
-         * Solves the puzzle
-         *
-         * @return bool
-         */
-        public function solve()
+        return array_values($possibilities);
+    }
+
+    /**
+     * @param int      $size The size of the Sudoku. Notice: The size have to be one of the
+     *                       following: 4, 9, 16, 25, 36.
+     * @param int      $difficulty
+     * @param int|null $seed
+     * @return array|false
+     * @throws InvalidArgumentException
+     */
+    public static function generateWithSolution($size, $difficulty, $seed = null)
+    {
+        // check inputs
+        if(!in_array($size,self::$dimensions,true)
+            || !in_array($difficulty, [self::VERY_EASY, self::EASY, self::NORMAL, self::MEDIUM, self::HARD], true)
+            || ($seed !== null && !is_int($seed)) )
+            throw new InvalidArgumentException('Invalid input');
+
+        // initialize random generator
+        if($seed === null)
+            $seed = time();
+
+        mt_srand($seed + $difficulty * 17);
+
+        // select blocks to fill randomly
+        $cols = range(0, self::$blockSizes[$size] - 1);
+        self::array_shuffle($cols);
+
+        // create empty sudoku
+        $sudoku = array_fill(0, $size, array_fill(0, $size, null));
+        $values = range(1, $size);
+
+        // fill randomly one block in each row (of blocks)
+        for($row = 0; $row < self::$blockSizes[$size]; $row += self::$blockSizes[$size])
         {
-            if ($this->isSolvable()) {
-                if($this->calculateSolution($this->solution)) {
-                    return true;
+            self::array_shuffle($values);
+            for($blockRows = 0; $blockRows < self::$blockSizes[$size]; $blockRows++)
+            {
+                for($blockCols = 0; $blockCols < self::$blockSizes[$size]; $blockCols++)
+                {
+                    $sudoku[$row * self::$blockSizes[$size] + $blockRows][$cols[$row] * self::$blockSizes[$size] + $blockCols] = $values[$blockRows * self::$blockSizes[$size] + $blockCols];
                 }
             }
-
-            return false;
         }
 
-        /**
-         * Gets the is solved value
-         *
-         * @return mixed
-         */
-        public function isSolved()
-        {
-            if (!$this->checkConstraints($this->solution, $this->solutionColumns, $this->solutionBoxes)) {
-                return false;
-            }
+        // fill the gaps
+        $solution = self::solve($sudoku);
+        $task = $solution;
+        // make new gaps
+        $numFields = pow($size, 2);
+        $gapFields = range(0,$numFields - 1);
+        self::array_shuffle($gapFields);
 
-            foreach ($this->puzzle as $rowIndex => $row) {
-                foreach ($row as $columnIndex => $column) {
-                    if ($column !== 0) {
-                        if ($this->puzzle[$rowIndex][$columnIndex] != $this->solution[$rowIndex][$columnIndex]) {
+        switch($difficulty)
+        {
+            case self::VERY_EASY:
+                $min = floor($numFields * 0.43);
+                $max = ceil($numFields * 0.50);
+                break;
+            case self::EASY:
+                $min = floor($numFields * 0.37);
+                $max = ceil($numFields * 0.43);
+                break;
+            case self::NORMAL:
+                $min = floor($numFields * 0.30);
+                $max = ceil($numFields * 0.37);
+                break;
+            case self::MEDIUM:
+                $min = floor($numFields * 0.26);
+                $max = ceil($numFields * 0.30);
+                break;
+            case self::HARD:
+//                break;
+            default:
+                $min = floor($numFields * 0.25);
+                $max = ceil($numFields * 0.27);
+        }
+
+        $numGapFields = $numFields - mt_rand($min,$max);
+
+        for($i = 0; $i < $numGapFields; $i++)
+        {
+            $row = $gapFields[$i] % $size;
+            $col = ($gapFields[$i] - $row) / $size;
+            $task[$row][$col] = null;
+        }
+
+        return [$task,$solution];
+    }
+
+    /**
+     * Wrapper that calls Sudoku::generateWithSolution, but returns only the task.
+     * @param      $size
+     * @param      $difficulty
+     * @param null $seed
+     * @return mixed
+     */
+    public static function generate($size, $difficulty, $seed = null)
+    {
+        list($task,) = self::generateWithSolution($size, $difficulty, $seed);
+        return $task;
+    }
+
+    /**
+     * Checks if the input is a valid sudoku solution.
+     *
+     * @param array $solution The solution to be checked
+     * @param array $task     The task that should be result in the solution. If provided, it
+     *                        is checked if the solution relates to the task
+     * @return bool
+     * @throws InvalidArgumentException
+     */
+    public static function checkSolution(array $solution, array $task = null)
+    {
+        if(!self::checkInput($solution))
+        {
+            throw new InvalidArgumentException('Input is no Sudoku array.');
+        }
+
+        $dim = count($solution);
+
+        if($task !== null)
+        {
+            if(count($task) !== $dim)
+                return false;
+
+            for($i = 0; $i < $dim; $i++)
+            {
+                for($j = 0; $j < $dim; $j++)
+                {
+                    if($task[$i][$j] !== null && $solution[$i][$j] !== $task[$i][$j])
+                        return false;
+                }
+            }
+        }
+
+
+        // check rows
+        for($row = 0; $row < $dim; $row++)
+        {
+            $valueFound = array_fill(1,$dim,false);
+            for($col = 0; $col < $dim; $col++)
+            {
+                // null check is only needed here
+                if($solution[$row][$col] === null || $valueFound[$solution[$row][$col]] === true)
+                    return false;
+                else
+                    $valueFound[$solution[$row][$col]] = true;
+            }
+        }
+
+        // check columns
+        for($col = 0; $col < $dim; $col++)
+        {
+            $valueFound = array_fill(1,$dim,false);
+            for($row = 0; $row < $dim; $row++)
+            {
+                if($valueFound[$solution[$row][$col]] === true)
+                    return false;
+                else
+                    $valueFound[$solution[$row][$col]] = true;
+            }
+        }
+
+        // check blocks
+        $blockSize = self::$blockSizes[$dim];
+        for($row = 0; $row < $dim; $row += $blockSize)
+        {
+            for($col = 0; $col < $dim; $col += $blockSize)
+            {
+                $valueFound = array_fill(1,$dim,false);
+                for($blockRow = 0; $blockRow < $blockSize;$blockRow++)
+                {
+                    for($blockCol = 0; $blockCol < $blockSize;$blockCol++)
+                    {
+                        if($valueFound[$solution[$row+$blockRow][$col+$blockCol]] === true)
                             return false;
-                        }
+                        else
+                            $valueFound[$solution[$row+$blockRow][$col+$blockCol]] = true;
                     }
                 }
             }
-
-            return true;
         }
 
-        /**
-         * Checks if a puzzle is solvable
-         *
-         * Only ensures the current puzzle is valid and doesn't violate any constraints
-         *
-         * @return bool
-         */
-        public function isSolvable()
+        return true;
+    }
+
+    /**
+     * Shuffles an array using the Fisher-Yates-Algorithm and mt_rand(). So it is affected by
+     * the seed set by mt_srand(). This means the result is reproducible.
+     * @param array $array
+     */
+    private static function array_shuffle(array &$array)
+    {
+        for($i = count($array) - 1; $i > 0; $i--)
         {
-            return $this->checkConstraints($this->puzzle, $this->puzzleColumns, $this->puzzleBoxes, true);
-        }
-
-        /**
-         * Generates a new random puzzle
-         *
-         * Difficulty is specified by the number of cells pre-populated in the puzzle, these are assigned randomly and does
-         * not necessarily guarantee a difficult or easy puzzle
-         *
-         * @param int $cellCount
-         * @return array|bool
-         */
-        public function generatePuzzle($cellCount = 15)
-        {
-            if (!is_integer($cellCount) || $cellCount < 0 || $cellCount > $this->getCellCount()) {
-                return false;
-            }
-
-            $this->setPuzzle($this->generateEmptyPuzzle());
-
-            if ($cellCount > 0) {
-                $this->solve();
-                $cells = array_rand(range(0, ($this->getCellCount() -1)), $cellCount);
-                $i = 0;
-
-                if (is_integer($cells)) {
-                    $cells = [$cells];
-                }
-
-                foreach ($this->solution as &$row) {
-                    foreach ($row as &$cell) {
-                        if (!in_array($i++, $cells)) {
-                            $cell = 0;
-                        }
-                    }
-                }
-
-                // Breaks reference between puzzle & solution
-                $this->puzzle = unserialize(serialize($this->solution));
-            }
-
-            $this->prepareReferences();
-
-            return true;
-        }
-
-        /**
-         * Check constraints of a puzzle or solution
-         *
-         * @param array $rows
-         * @param array $columns
-         * @param array $boxes
-         * @param bool $allowZeros
-         *
-         * @return bool
-         */
-        protected function checkConstraints($rows, $columns, $boxes, $allowZeros = false)
-        {
-            foreach ($rows as $rowIndex => $row) {
-                if (!$this->checkContainerForViolations($row, $allowZeros)) {
-                    return false;
-                }
-
-                foreach ($columns as $columnIndex => $column) {
-
-                    if (!$this->checkContainerForViolations($column, $allowZeros)) {
-                        return false;
-                    }
-
-                    if (!$this->checkContainerForViolations($boxes[$this->boxLookup[$rowIndex][$columnIndex]], $allowZeros)) {
-                        return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        /**
-         * Generates an empty puzzle array
-         *
-         * @return array
-         */
-        protected function generateEmptyPuzzle()
-        {
-            return array_fill(0, $this->getGridSize(), array_fill(0, $this->getGridSize(), 0));
-        }
-
-        /**
-         * Ensures the puzzle array is of the correct size
-         *
-         * @param array $puzzle
-         *
-         * @return bool
-         */
-        protected function isValidPuzzleFormat(array $puzzle)
-        {
-            if (!is_array($puzzle) || count($puzzle) != $this->getGridSize()) {
-                return false;
-            }
-
-            foreach ($puzzle as $row) {
-                if (count($row) != $this->getGridSize()) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /**
-         * Calculates the solution
-         *
-         * A brute force backtracking algorithm that starts at the 0 value cell closest to A1 on the grid and calculates is
-         * available options based on the games constraints. It will then populate the cell with the first option and move
-         * on to the next cell by calling it's self recursively. Should it eventually find it's self with no available
-         * options for a cell it will 'backtrack' to the previous cell and try the next option until either a solution is
-         * found or all options are exhausted.
-         *
-         * @param array $puzzle
-         *
-         * @return bool
-         */
-        protected function calculateSolution(array $puzzle)
-        {
-            $continue = true;
-
-            while ($continue) {
-
-                $options = null;
-
-                foreach ($puzzle as $rowIndex => $row) {
-
-                    $columnIndex = array_search(0, $row);
-
-                    if ($columnIndex === false) {
-                        continue;
-                    }
-
-                    $validOptions = $this->getValidOptions($rowIndex, $columnIndex);
-
-                    if (count($validOptions) == 0) {
-                        return false;
-                    }
-
-                    break;
-                }
-
-                if (!isset($validOptions) || empty($validOptions)) {
-                    return $puzzle;
-                }
-
-                foreach ($validOptions as $key => $value) {
-                    $puzzle[$rowIndex][$columnIndex] = $value;
-                    $result = $this->calculateSolution($puzzle);
-
-                    if ($result == true) {
-                        return $result;
-                    } else {
-                        $puzzle[$rowIndex][$columnIndex] = 0;
-                    }
-                }
-
-                $continue = false;
-            }
-
-            return false;
-        }
-
-        /**
-         * Gets the valid options for a cell based on the constraints of the game
-         *
-         * @param integer $rowIndex
-         * @param integer $columnIndex
-         *
-         * @return array
-         */
-        protected function getValidOptions($rowIndex, $columnIndex)
-        {
-            $invalid = array_merge($this->solution[$rowIndex], $this->solutionColumns[$columnIndex], $this->solutionBoxes[$this->boxLookup[$rowIndex][$columnIndex]]);
-            $invalid = array_flip(array_flip($invalid));
-
-            $valid = array_diff(range(1, $this->getGridSize()), $invalid);
-            shuffle($valid);
-
-            return $valid;
-        }
-
-        /**
-         * Checks an array for violations
-         *
-         * A array is deemed to contain violations if it contains any duplicate values, the inclusion of 0 values can be
-         * specified via the $allowZeros parameter
-         *
-         * @param array $container
-         * @param bool $allowZeros
-         *
-         * @return bool
-         */
-        protected function checkContainerForViolations(array $container, $allowZeros = false)
-        {
-            if (!$allowZeros && in_array(0, $container)) {
-                return false;
-            }
-
-            if (($keys = array_keys($container, 0)) !== false) {
-                foreach ($keys as $key) {
-                    unset($container[$key]);
-                }
-            }
-
-            // array_flip(array_flip()) is significantly faster than array_unique()
-            $flippedContainer = array_flip($container);
-            $uniqueContainer = array_flip($flippedContainer);
-
-            if (count($container) != count($uniqueContainer)) {
-                return false;
-            }
-
-            foreach(range(1, $this->getGridSize()) as $index) {
-                unset($flippedContainer[$index]);
-            }
-
-            if(!empty($flippedContainer)) {
-                return false;
-            }
-
-            return true;
-        }
-
-        /**
-         * Gets the total number of cells in the puzzle
-         *
-         * @return int
-         */
-        protected function getCellCount()
-        {
-            return ($this->getGridSize() * $this->getGridSize());
-        }
-
-        /**
-         * Prepares references
-         *
-         * @param bool $puzzle
-         */
-        protected function prepareReferences($puzzle = true)
-        {
-            if($puzzle) {
-                $source = &$this->puzzle;
-                $columns = &$this->puzzleColumns;
-                $boxes = &$this->puzzleBoxes;
-            } else {
-                $source = &$this->solution;
-                $columns = &$this->solutionColumns;
-                $boxes = &$this->solutionBoxes;
-            }
-
-            $this->setColumns($source, $columns);
-            $this->setBoxes($source, $boxes);
-        }
-
-        /**
-         * Sets a columns array linked to the puzzle by reference
-         *
-         * Rebuilds the array from scratch to prevent unwanted cells lingering when shrinking the cell count
-         *
-         * @param array $source
-         * @param array $columns
-         */
-        protected function setColumns(array &$source, array &$columns)
-        {
-            $columns = [];
-            for($i = 0; $i < $this->getGridSize(); $i++)
-            {
-                for($j = 0; $j < $this->getGridSize(); $j++)
-                {
-                    $columns[$j][$i] = &$source[$i][$j];
-                }
-            }
-        }
-
-        /**
-         * Sets a boxes array linked to the puzzle by reference
-         *
-         * Rebuilds the array from scratch to prevent unwanted cells lingering when shrinking the cell count
-         *
-         * @param array $source
-         * @param array $boxes
-         */
-        protected function setBoxes(array &$source, array &$boxes)
-        {
-            $boxes = [];
-            for($i = 0; $i < $this->getGridSize(); $i++)
-            {
-                for($j = 0; $j < $this->getGridSize(); $j++)
-                {
-                    $row = floor(($i ) / $this->cellSize);
-                    $column =  floor(($j ) / $this->cellSize);
-                    $box = (int) floor($row * $this->cellSize + $column);
-                    $cell = ($i % $this->cellSize) * ($this->cellSize) + ($j % $this->cellSize);
-
-                    $boxes[$box][$cell] = &$source[$i][$j];
-                    $this->boxLookup[$i][$j] = $box;
-                }
-            }
+            $j = mt_rand(0,$i);
+            $temp = $array[$i];
+            $array[$i] = $array[$j];
+            $array[$j] = $temp;
         }
     }
 
-    $table = $_POST['tablero'];
+    /**
+     * Checks if the input is an actual sudoku. i.e. The input array has two dimensions, is
+     * quadratic and contains only integers between 1 and the number of rows/columns. This
+     * function also casts all non null values to int, such that a valid input containing
+     * stings works fine.
+     *
+     * @param array $inputSudoku
+     * @return bool
+     */
+    public static function checkInput(array &$inputSudoku)
+    {
+        $rowCount = count($inputSudoku);
+        if(!in_array($rowCount,self::$dimensions,true))
+        {
+            return false;
+        }
 
-    $game = new Sudoku();
+        foreach($inputSudoku as &$row)
+        {
+            // check dimensions
+            if(!is_array($row) || count($row) !== $rowCount)
+            {
+                return false;
+            }
 
-    $game->solve_it($table);
-    $game->getResult();
-
+            // check types
+            foreach($row as &$item)
+            {
+                if($item === null)
+                {
+                    continue;
+                }
+                if(!is_int($item))
+                {
+                    $item = (int) $item;
+                }
+                if($item < 1 || $item > $rowCount)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
 ?>
