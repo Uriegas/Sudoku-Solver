@@ -4,24 +4,18 @@ const $btnResolver = $('#btnResolver');
 $btnResolver.on('click',function(e){
     e.preventDefault();
     const tablerosudoku = getTable();
-    console.log(tablerosudoku);
+    const jsonTablero = JSON.stringify(tablerosudoku); // Convert tablerosudoku to JSON
     $.ajax({
         method: "POST",
-        url: "backend.php",
+        url: "solveSudoku.php",
         data: {
-            tablero: tablerosudoku // Array of arrays
+            tablero: jsonTablero // Array of arrays
         }
-    }).done(function(response){ // TODO: Receive the response
-        if (response == 'error'){
-            alert('Unsolvable Sudoku');
-        }
-        else{
-            const tablero = JSON.parse(response);
-            for (let r = 0; r < 9; r++){
-                for (let c = 0; c < 9; c++){
-                    const elementID = `#txtN_${r}_${c}`;
-                    $(elementID).val(tablero[r][c]);
-                }
+    }).done(function(response){
+        for($i = 0; $i < 9; $i++){
+            for($j = 0; $j < 9; $j++){
+                const elementID = `#txtN_${$i}_${$j}`;
+                $(elementID).val(response[$i][$j]);
             }
         }
     })
@@ -41,11 +35,26 @@ function getTable(){
 
 function numero0Null(s){
     const v = parseInt(s);
-    return isNaN(v) ? 0 : v;
+    return isNaN(v) ? null : v;
 
 }
 
 function valorMatrix(r,c){
     const elementID = `#txtN_${r}_${c}`;
     return numero0Null($(elementID).val());
+}
+
+
+function generateSudoku(){
+    $.ajax({
+        method: "GET",
+        url: "getSudoku.php"
+    }).done(function(response){
+        for($i=0; $i < 9; $i++){
+            for($j=0; $j < 9; $j++){
+                const elementID = `#txtN_${$i}_${$j}`;
+                $(elementID).val(response[$i][$j]);
+            }
+        }
+    })
 }
