@@ -11,6 +11,9 @@
 <body>
 
     <div class="contenedor">
+        <header>
+            <h1>Sudoku Solver</h1>
+        </header>
         <div class="contenido">
             <table>
                 <!-- TODO Add default value of 0 instead of null -->
@@ -115,9 +118,15 @@
                     <td><input type="number" min="0" max="9" name="n_8_8" id="txtN_8_8" class="n"></td>
                 </tr>
             </table>
-            <button onclick="generateSudoku()">Generar</button>
-            <input type="button" value="Resolver" id="btnResolver">
+            <div class="botones">
+                <button onclick="generateSudoku()">Generar</button>
+                <input type="button" value="Resolver" id="btnResolver">
+            </div>
         </div>
+        <footer>
+            <p>Daniela Estefania Huerta Vázquez</p>
+            <p>Jesús Eduardo Uriegas Ibarra</p>
+        </footer>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="sudoku.js"></script>

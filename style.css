@@ -7,14 +7,25 @@ body{
     background-color: #B9F5E6;
 }
 
+header{
+    padding: 0px;
+}
+
+header h1{
+    font-size: 50px;
+    color: #347867;
+    text-align: center;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
 .contenedor{
     max-width: 1000px;
     margin: 0 auto;
 }
 
 .contenido{
-    margin-top: 50px;
-    margin-left: 20%;
+    margin-top: 20px;
+    margin-left: 25%;
 }
 
 table{
@@ -42,6 +53,10 @@ input[type=number]:focus {
     background-color: transparent;
   }
 
+.botones{
+    margin-left: 7%;
+}
+
 input[type=button], button{
     width: 200px;
     height: 50px;
@@ -61,4 +76,14 @@ input[type=button]:active, button:active{
     background-color: #08D8A4;
     box-shadow: 5px 5px 8px #5B9A8A;
     transform: translateY(5px);
+}
+
+footer{
+    margin-top: 10px;
+}
+
+footer p{
+    text-align: center;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    color: #055A45;
 }
